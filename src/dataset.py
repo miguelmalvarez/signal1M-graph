@@ -46,6 +46,7 @@ def create_dataset():
     """Main function to create/download the dataset"""
     # Setup paths
     data_dir = Path("data/raw")
+    sampled_dir = Path("data/processed")
     file_path = data_dir / "signalmedia-1m.jsonl.gz"
     uncompressed_path = data_dir / "signalmedia-1m.jsonl"
     
@@ -67,17 +68,13 @@ def create_dataset():
     
     #Create samples
     sample_sizes = [1000, 10000, 100000]
-    sample_paths = []
     
     for size in sample_sizes:
-        sample_path = data_dir / f"signalmedia-{size}.jsonl"
+        sample_path = sampled_dir / f"signalmedia-{size}.jsonl"
         if not sample_path.exists():
             create_sample(uncompressed_path, sample_path, size)
         else:
             print(f"Sample of {size} lines already exists at {sample_path}")
-        sample_paths.append(sample_path)
     
-    return uncompressed_path, sample_paths
-
 if __name__ == "__main__":
     create_dataset()

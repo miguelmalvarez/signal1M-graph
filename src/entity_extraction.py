@@ -59,6 +59,7 @@ def process_jsonl(input_path: Path) -> Generator[Dict, None, None]:
     """Process each line of the JSONL file and extract entities and relationships"""
     nlp = load_spacy_model()
     
+    #TODO: Add coreference resolution step?
     with open(input_path) as f:
         for line in f:
             article = json.loads(line)
@@ -111,10 +112,10 @@ def extract_entities(input_path: Path, output_path: Path):
 
 if __name__ == "__main__":
     markets = ['legal', 'vc']
-    sample_sizes = [10]
+    sample_sizes = [10, 100]
 
     for market in markets:
         for size in sample_sizes:
             input_path = Path(f"data/processed/signalmedia-{size}-{market}.jsonl")
-            output_path = Path(f"data/processed/entities-{size}-{market}.jsonl")
+            output_path = Path(f"data/output/entities-{size}-{market}.jsonl")
             extract_entities(input_path, output_path)

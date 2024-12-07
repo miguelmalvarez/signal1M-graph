@@ -171,3 +171,9 @@ data/external/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/external/.gitkeep
+
+# Python version management
+.python-version
+
+# Python package management
+uv.lock

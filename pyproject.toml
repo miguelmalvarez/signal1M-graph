@@ -1,0 +1,28 @@
+[project]
+name = "signal1m-graph"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = "==3.12.8"
+dependencies = [
+    "pandas",
+    "numpy==1.26.4",
+    "streamlit",
+    "jupyter",
+    "pytest",
+    "wget",
+    "spacy==3.7.4",
+    "setuptools>=75.6.0",
+    "wheel>=0.45.1",
+    "spacy-llm>=0.6.4",
+    "openai>=1.12.0",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.poetry.scripts]
+setup = "scripts.setup:download_spacy_models"
+
+[dependency-groups]
+dev = [
+    "pip>=24.3.1",
+]

@@ -17,6 +17,7 @@ dependencies = [
     "spacy-llm>=0.6.4",
     "openai>=1.12.0",
     "python-dotenv>=1.0.0",
+    "neo4j>=5.27.0",
 ]
 
 [tool.poetry.scripts]

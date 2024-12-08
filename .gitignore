@@ -168,6 +168,7 @@ cython_debug/
 data/raw/*
 data/processed/*
 data/external/*
+data/output/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/external/.gitkeep

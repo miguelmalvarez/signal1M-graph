@@ -24,16 +24,18 @@ class Neo4jConnection:
     def close(self):
         self.driver.close()
     
-    def _create_entity_nodes(self, tx, entities: Dict, article_id: str):
-        """Create entity nodes and their relationships to articles"""
+    def _create_entity_nodes(self, tx, entities: Dict):
+        """Create entity nodes only
+        
+        Args:
+            tx: Neo4j transaction
+            entities (Dict): Dictionary of entity types to lists of entity names
+        """
         for entity_type, entities_list in entities.items():
             for entity in entities_list:
                 tx.run("""
                     MERGE (e:Entity {name: $name, type: $type})
-                    WITH e
-                    MATCH (a:Article {id: $article_id})
-                    MERGE (e)-[:MENTIONED_IN]->(a)
-                """, name=entity, type=entity_type, article_id=article_id)
+                """, name=entity, type=entity_type)
 
     def _create_cooccurrence_relationships(self, tx, entities: Dict):
         """Create relationships between entities that co-occur in the same article"""
@@ -51,17 +53,63 @@ class Neo4jConnection:
                             ON MATCH SET r.weight = r.weight + 1
                         """, entity1=entity1, type1=type1,
                              entity2=entity2, type2=type2)
+    def _create_mentioned_in_relations(self, tx, entities: Dict, article_id: str):
+        """Create MENTIONED_IN relationships between entities and articles
+        
+        Args:
+            tx: Neo4j transaction
+            entities (Dict): Dictionary of entity types to lists of entity names
+            article_id (str): ID of the article to link entities to
+        """
+        for entity_type, entities_list in entities.items():
+            for entity in entities_list:
+                tx.run("""
+                    MATCH (e:Entity {name: $name, type: $type})
+                    MATCH (a:Article {id: $article_id})
+                    MERGE (e)-[:MENTIONED_IN]->(a)
+                """, name=entity, type=entity_type, article_id=article_id)
 
-    def _create_entities_and_relations(self, tx, entities: Dict, article_id: str):
+    def _create_extracted_relationships(self, tx, triples: List[tuple]):
+        """Create relationships between entities based on (source, relation, target) triples
+        
+        Args:
+            tx: Neo4j transaction
+            triples: List of tuples, each containing (source, relation, target)
+                    where source and target are entity names and relation is a string
+        
+        Example:
+            triples = [
+                ("Apple", "COMPETES_WITH", "Microsoft"),
+                ("Google", "ACQUIRED", "YouTube"),
+                ("Tesla", "LED_BY", "Elon Musk")
+            ]
+        """
+        for source, relation, target in triples:
+            query = f"""
+                MATCH (e1:Entity {{name: $source}})
+                MATCH (e2:Entity {{name: $target}})
+                MERGE (e1)-[r:{relation.upper()}]->(e2)
+                ON CREATE SET r.weight = 1
+                ON MATCH SET r.weight = r.weight + 1
+            """
+
+            tx.run(query,
+                source=source,
+                target=target
+            )
+
+    def _create_entities_and_relations(self, tx, entities: Dict, relations: List[tuple], article_id: str):
         """Helper method to create entities and relations in a single transaction"""
         # Create article node
         tx.run("""
             MERGE (a:Article {id: $article_id})
         """, article_id=article_id)
         
-        self._create_entity_nodes(tx, entities, article_id)
-        self._create_cooccurrence_relationships(tx, entities)
-
+        # Create entities first, then create relationships
+        self._create_entity_nodes(tx, entities)
+        # self._create_mentioned_in_relations(tx, entities, article_id)
+        # self._create_cooccurrence_relationships(tx, entities)
+        self._create_extracted_relationships(tx, relations)
 
     def load_entities_and_relations(self, file_path: str):
         """Load entities and their relations from a jsonl file into Neo4j"""
@@ -71,14 +119,14 @@ class Neo4jConnection:
                     data = json.loads(line)
                     article_id = data.get('id')
                     entities = data.get('entities', {})
-                    relations = data.get('relations', {})
+                    relations = data.get('relationships', {})
 
                     if article_id and entities:
                         session.execute_write(
                             self._create_entities_and_relations,
                             entities,
-                            article_id,
-                            relations
+                            relations,
+                            article_id
                         )
 
 def load_entity_file(file_path: str):
@@ -102,4 +150,4 @@ def load_entity_file(file_path: str):
         neo4j.close()
 
 if __name__ == "__main__":
-    load_entity_file('data/output/entities-10-vc.jsonl') 
+    load_entity_file('data/output/entities-1000-vc.jsonl') 

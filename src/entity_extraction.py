@@ -12,11 +12,6 @@ load_dotenv()  # This loads the .env file
 
 def load_spacy_model():
     """Load spaCy model with LLM relationship extraction"""
-
-    # for model in ["en_core_web_sm", "en_core_web_md", "en_core_web_lg"]:
-    #     spacy.cli.download(model) # TODO: Only download the model used in config and never if already downloaded.
-
-
     nlp = assemble('src/spacy.cfg')
     return nlp
 
@@ -112,7 +107,7 @@ def extract_entities(input_path: Path, output_path: Path):
 
 if __name__ == "__main__":
     markets = ['legal', 'vc']
-    sample_sizes = [10, 100]
+    sample_sizes = [100]
 
     for market in markets:
         for size in sample_sizes:

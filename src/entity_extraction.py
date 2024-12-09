@@ -1,5 +1,6 @@
 import json
 import spacy
+from tqdm import tqdm
 from time import sleep
 from pathlib import Path
 from typing import Dict, List, Generator, Tuple
@@ -17,9 +18,6 @@ def load_spacy_model():
 
 def process_line(text: str, nlp) -> Dict:
     """Extract entities and relationships from a single text"""
-    print(len(text))
-
-
     relevant_entity_types = ["GPE", "ORG", "PERSON"]
     try:
         doc = nlp(text)
@@ -53,10 +51,12 @@ def process_line(text: str, nlp) -> Dict:
 def process_jsonl(input_path: Path) -> Generator[Dict, None, None]:
     """Process each line of the JSONL file and extract entities and relationships"""
     nlp = load_spacy_model()
+
+    total_lines = sum(1 for _ in open(input_path))
     
     #TODO: Add coreference resolution step?
     with open(input_path) as f:
-        for line in f:
+        for line in tqdm(f, total=total_lines, desc="\nProcessing articles"):
             article = json.loads(line)
             text = article['content']
             
@@ -66,9 +66,9 @@ def process_jsonl(input_path: Path) -> Generator[Dict, None, None]:
 
                 #TODO: Potentially using summarisation to limit the amount of text processed
                 # Split texts when they are too long for the LLM
-                max_char_size = 3000
+                max_char_size = 30000
                 extractions = {'entities': {}, 'relationships': []}
-                print(len(text))
+                # print(len(text))
 
                 num_chunks = len(text)//max_char_size
                 if len(text)%max_char_size > 0:
@@ -106,8 +106,8 @@ def extract_entities(input_path: Path, output_path: Path):
     print(f"Entities and relationships saved to {output_path}")
 
 if __name__ == "__main__":
-    markets = ['legal', 'vc']
-    sample_sizes = [100]
+    markets = ['legal']
+    sample_sizes = [10]
 
     for market in markets:
         for size in sample_sizes:

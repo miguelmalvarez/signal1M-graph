@@ -169,12 +169,11 @@ data/raw/*
 data/processed/*
 data/external/*
 data/output/*
-!data/raw/.gitkeep
-!data/processed/.gitkeep
-!data/external/.gitkeep
+
 
 # Python version management
 .python-version
 
 # Python package management
 uv.lock
+.DS_Store
